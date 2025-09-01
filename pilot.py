@@ -36,7 +36,7 @@ if uploaded_file is not None:
             df = pd.read_json(uploaded_file)
 
         # 必須カラムの確認
-        if {'lat', 'lon'}.issubset(df.columns):
+        if {'latitude', 'longitude'}.issubset(df.columns):
             st.success("ファイルを読み込みました。地図にプロットします。")
             st.map(df)
         else:
@@ -56,3 +56,4 @@ else:
     })
 
     st.map(df)
+
