@@ -21,6 +21,21 @@ if uploaded_file is not None:
             'longitude': 'lon',
             'lng': 'lon'
         })
+        # RSRPに応じて色を計算（赤＝弱い、緑＝強い）
+        def rsrp_to_color(rsrp):
+            strength = max(0, min(255, 255 + rsrp))  # rsrpは負の値なので補正
+            return [255 - strength, strength, 100, 160]
+        
+        df['color'] = df['rsrp'].apply(rsrp_to_color)
+        
+        layer = pdk.Layer(
+            "ScatterplotLayer",
+            data=df,
+            get_position='[lon, lat]',
+            get_color='color',
+            get_radius=30,
+            pickable=True
+        )
 
         # 必須カラムの確認
         if {'lat', 'lon', 'rsrp'}.issubset(df.columns):
@@ -60,3 +75,4 @@ if uploaded_file is not None:
         st.error(f"ファイルの読み込み中にエラーが発生しました: {e}")
 else:
     st.info("CSVファイルをアップロードすると、RSRP付きで地図表示できます。")
+
