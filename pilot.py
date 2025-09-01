@@ -31,15 +31,6 @@ uploaded_file = st.file_uploader("CSVファイルをアップロードしてく�
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file, sep="\t")  # タブ区切りに対応
 
-    # カラム名を標準化
-    df = df.rename(columns={
-        'Latitude': 'lat',
-        'Longitude': 'lon',
-        'latitude': 'lat',
-        'longitude': 'lon',
-        'rsrp': 'rsrp',
-        'RSRP': 'rsrp'
-    })
 
     # 必須カラムの確認
     if {'lat', 'lon', 'rsrp'}.issubset(df.columns):
@@ -77,6 +68,7 @@ if uploaded_file is not None:
         st.error("ファイルに 'lat', 'lon', 'rsrp' カラムが含まれていません。")
 else:
     st.info("CSVファイルをアップロードすると、RSRP付きで地図表示できます。")
+
 
 
 
