@@ -21,43 +21,63 @@
 ###  ファイルを選択　　###
 import streamlit as st
 import pandas as pd
-import numpy as np
+import pydeck as pdk
 
-st.title("📍 柳井港周辺の地点を地図に表示")
+st.title("📶 RSRP付き地点データの地図表示")
 
 # ファイルアップロード
-uploaded_file = st.file_uploader("CSVまたはJSONファイルをアップロードしてください", type=["csv", "json"])
+uploaded_file = st.file_uploader("CSVファイルをアップロードしてください", type=["csv"])
 
-# ファイルがアップロードされた場合
 if uploaded_file is not None:
-    try:
-        if uploaded_file.name.endswith(".csv"):
-            df = pd.read_csv(uploaded_file)
-        elif uploaded_file.name.endswith(".json"):
-            df = pd.read_json(uploaded_file)
+    df = pd.read_csv(uploaded_file, sep="\t")  # タブ区切りに対応
 
-
-        # 必須カラムの確認
-        if {'latitude', 'longitude'}.issubset(df.columns):
-            st.success("ファイルを読み込みました。地図にプロットします。")
-            st.map(df)
-        else:
-            st.error("ファイルに 'lat' と 'lon' カラムが含まれていません。")
-    except Exception as e:
-        st.error(f"ファイルの読み込み中にエラーが発生しました: {e}")
-else:
-    st.info("ファイルが未アップロードのため、ランダム地点を表示します。")
-
-    # 柳井港周辺のランダムな座標を生成
-    latitude = 33.957268
-    longitude = 132.134044
-
-    df = pd.DataFrame({
-        'lat': np.random.normal(latitude, 0.01, 50),
-        'lon': np.random.normal(longitude, 0.01, 50)
+    # カラム名を標準化
+    df = df.rename(columns={
+        'Latitude': 'lat',
+        'Longitude': 'lon',
+        'latitude': 'lat',
+        'longitude': 'lon',
+        'rsrp': 'rsrp',
+        'RSRP': 'rsrp'
     })
 
-    st.map(df)
+    # 必須カラムの確認
+    if {'lat', 'lon', 'rsrp'}.issubset(df.columns):
+        st.success("ファイルを読み込みました。地図にプロットします。")
+
+        # pydeckでマップ表示
+        layer = pdk.Layer(
+            "ScatterplotLayer",
+            data=df,
+            get_position='[lon, lat]',
+            get_color='[255 - abs(rsrp), abs(rsrp), 100, 160]',  # RSRPの強さで色分け
+            get_radius=30,
+            pickable=True
+        )
+
+        tooltip = {
+            "html": "<b>RSRP:</b> {rsrp}<br/><b>Lat:</b> {lat}<br/><b>Lon:</b> {lon}",
+            "style": {"backgroundColor": "navy", "color": "white"}
+        }
+
+        view_state = pdk.ViewState(
+            latitude=df['lat'].mean(),
+            longitude=df['lon'].mean(),
+            zoom=16,
+            pitch=0
+        )
+
+        st.pydeck_chart(pdk.Deck(
+            map_style="mapbox://styles/mapbox/light-v9",
+            initial_view_state=view_state,
+            layers=[layer],
+            tooltip=tooltip
+        ))
+    else:
+        st.error("ファイルに 'lat', 'lon', 'rsrp' カラムが含まれていません。")
+else:
+    st.info("CSVファイルをアップロードすると、RSRP付きで地図表示できます。")
+
 
 
 
