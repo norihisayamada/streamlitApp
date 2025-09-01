@@ -35,18 +35,6 @@ if uploaded_file is not None:
             df = pd.read_csv(uploaded_file)
         elif uploaded_file.name.endswith(".json"):
             df = pd.read_json(uploaded_file)
-         # ✅ ここでカラム名を標準化
-        df = df.rename(columns={
-             'latitude': 'lat',
-             'longitude': 'lon',
-             'Latitude': 'lat',
-             'Longitude': 'lon',
-             'LAT': 'lat',
-             'LON': 'lon',
-             'lng': 'lon',
-             'Lng': 'lon'
-        }) 
-
 
 
         # 必須カラムの確認
@@ -70,5 +58,6 @@ else:
     })
 
     st.map(df)
+
 
 
